@@ -25,8 +25,8 @@ app.run(function($ionicPlatform) {
 		}
 	});
 });
+var url = 'https://www.google.com.br/#q=john+steel';
 app.factory('searchService', function($http) {
-	var url = 'https://www.google.com.br/search?q=marcuskbra';
 	var getData = function() {
 		return $http.get(url);
 	};
@@ -39,15 +39,34 @@ app.controller('BackgroundController', function($scope, searchService) {
 
 	$scope.buscar = function() {
 		console.log('buscando...');
-		searchService.getData().then(function successCallback(response) {
-			// this callback will be called asynchronously when the response is
-			// available
-			console.log(response);
-		}, function errorCallback(response) {
-			// called asynchronously if an error occurs or server returns
-			// response with an error status.
-			console.error(response);
+
+		var ref = cordova.InAppBrowser.open(url, '_blank', 'hidden=yes');
+		ref.addEventListener('loadstart', function(event) {
+			console.log('loading...');
+			console.log(event);
 		});
+		ref.addEventListener('loadstop', function(event) {
+			console.log('loaded!');
+			console.log(event);
+			//TODO: estudar maneira de injetar o script do jQuery
+			ref.executeScript({
+				code : "document.body.innerHTML"
+			}, function(values) {
+				console.log('execScript callback: ' + values.length);
+//				for (var i = 0; i < values.length; i++) {
+//					console.log(' --------- ');
+//					console.log(values[i]);
+//				}
+			});
+		});
+
+		/*
+		 * searchService.getData().then(function successCallback(response) { //
+		 * this callback will be called asynchronously when the response is //
+		 * available console.log(response); }, function errorCallback(response) { //
+		 * called asynchronously if an error occurs or server returns //
+		 * response with an error status. console.error(response); });
+		 */
 	};
 
 	document.addEventListener('deviceready', function() {
@@ -62,7 +81,7 @@ app.controller('BackgroundController', function($scope, searchService) {
 				counter = counter + 5;
 
 				console.log('Running since ' + counter + ' sec');
-				$scope.buscar();
+//				$scope.buscar();
 				if (device.platform != 'Android') {
 					cordova.plugins.notification.badge.set(counter);
 				}
@@ -81,5 +100,6 @@ app.controller('BackgroundController', function($scope, searchService) {
 				cordova.plugins.notification.badge.clear();
 			}
 		};
+
 	}, false);
 });
